@@ -24,6 +24,17 @@ def create_refeicao():
     else:
         return jsonify({"message": "Dados incompletos"}), 400
 
+@app.route("/refeicao/<int:id>", methods=["PUT"])
+def update_refeicao(id): 
+    data = request.json 
+    refeicao = RefeicaoController.get_or_404(id)
+
+    if refeicao and data.get("nome"):
+        refeicao.nome = data.get("nome")
+    
+        return jsonify({"message": "Refeicao atualizada com sucesso"}), 200
+
+    return jsonify({"message": "Refeicao não encontrada"}), 404
 
 
 if __name__ == "__main__":
