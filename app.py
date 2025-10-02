@@ -4,6 +4,7 @@ from controllers.refeicao import RefeicaoController
 
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = "secret_key"
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://admin:admin123@localhost:3307/flask_db"
 db.init_app(app)
 
@@ -27,15 +28,39 @@ def create_refeicao():
 @app.route("/refeicao/<int:id>", methods=["PUT"])
 def update_refeicao(id): 
     data = request.json 
-    refeicao = RefeicaoController.get_or_404(id)
+    refeicao = RefeicaoController.query.get(id)
 
-    if refeicao and data.get("nome"):
+    if data.get("nome"):
         refeicao.nome = data.get("nome")
+    if data.get("descricao"):
+        refeicao.descricao = data.get("descricao")
+    if data.get("data_hora"):
+        refeicao.data_hora = data.get("data_hora")
+    if data.get("esta_na_receita") is not None:
+        refeicao.esta_na_receita = data.get("esta_na_receita")
     
-        return jsonify({"message": "Refeicao atualizada com sucesso"}), 200
+    db.session.commit()
+    return jsonify({"message": "Refeicao atualizada com sucesso"}), 200
 
-    return jsonify({"message": "Refeicao não encontrada"}), 404
 
+@app.route("/refeicao/<int:id>", methods=["DELETE"])
+def delete_refeicao(id):
+    refeicao = RefeicaoController.query.get(id)
+    db.session.delete(refeicao)
+    db.session.commit()
+    return jsonify({"message": "Refeicao deletada com sucesso"}), 200
+
+
+@app.route("/refeicao", methods=["GET"])
+def listar_refeicoes():
+    refeicoes = RefeicaoController.query.all()
+    return jsonify({"refeicoes": [refeicao.to_dict() for refeicao in refeicoes]}), 200
+
+
+@app.route("/refeicao/<int:id>", methods=["GET"])
+def get_refeicao(id):
+    refeicao = RefeicaoController.query.get(id)
+    return jsonify({"refeicao": refeicao.to_dict()}), 200
 
 if __name__ == "__main__":
     app.run(debug=True, port=3000)
